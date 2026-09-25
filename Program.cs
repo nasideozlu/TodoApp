@@ -8,7 +8,8 @@ Console.WriteLine("Yapmak Istediginiz Islemi Secin");
 Console.WriteLine("1.Gorevleri Listele");
 Console.WriteLine("2.Gorev Ekle");
 Console.WriteLine("3.Gorev Sil");
-Console.WriteLine("4.Cikis Yap");
+Console.WriteLine("4.Gorev Durumu Guncelle");
+Console.WriteLine("5.Cikis Yap");
 
 var kullaniciSecimi = Console.ReadLine();
 
@@ -35,8 +36,15 @@ case "2":
     break;
 
 case"3":
-    Console.WriteLine("Silmek istediginiz gorevi seciniz:");
+    Console.WriteLine("Mevcut Gorevler:");
     
+    foreach(Todo gorev in todos)
+    {
+         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
+    }
+
+    Console.WriteLine("Silmek istediginiz gorevi seciniz:");
+   
     int id = Convert.ToInt32(Console.ReadLine());
     Todo? silinecek = null;
 
@@ -52,9 +60,43 @@ case"3":
     {
          todos.Remove(silinecek);
     }
+    else
+    {
+        Console.WriteLine("Gorev Bulunamadi.");
+    }
     break;
 
 case "4":
+    Console.WriteLine("Mevcut Gorevler:");
+    
+    foreach(Todo gorev in todos)
+    {
+         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
+    }
+    Console.WriteLine("Tamamlanan gorev id seciniz:");
+    int finishId = Convert.ToInt32(Console.ReadLine());
+    Todo? guncelleme = null;
+
+    foreach(Todo gorev in todos)
+    {
+        if(gorev.Id == finishId)
+        {
+            guncelleme = gorev;
+        }
+    }
+    if(guncelleme != null)
+    {
+        guncelleme.Completed = true;
+        Console.WriteLine("Gorev Tamamlandi.");
+    }
+    else 
+    {
+        Console.WriteLine("Gorev Bulunamadi.");
+    }
+    break;
+
+
+case "5":
     Console.WriteLine("Cikis Yapiliyor.");
     shouldExit = true;
     break;
