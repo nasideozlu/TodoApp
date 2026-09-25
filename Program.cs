@@ -8,7 +8,8 @@ Console.WriteLine("Yapmak Istediginiz Islemi Secin");
 Console.WriteLine("1.Gorevleri Listele");
 Console.WriteLine("2.Gorev Ekle");
 Console.WriteLine("3.Gorev Sil");
-Console.WriteLine("4.Cikis Yap");
+Console.WriteLine("4.Gorev Durumu Guncelle");
+Console.WriteLine("5.Cikis Yap");
 
 var kullaniciSecimi = Console.ReadLine();
 
@@ -55,6 +56,30 @@ case"3":
     break;
 
 case "4":
+    Console.WriteLine("Tamamlanan gorev id seciniz:");
+    int finishId = Convert.ToInt32(Console.ReadLine());
+    Todo? guncelleme = null;
+
+    foreach(Todo gorev in todos)
+    {
+        if(gorev.Id == finishId)
+        {
+            guncelleme = gorev;
+        }
+    }
+    if(guncelleme != null)
+    {
+        guncelleme.Completed = true;
+        Console.WriteLine("Gorev Tamamlandi.");
+    }
+    else 
+    {
+        Console.WriteLine("Gorev Bulunamadi.");
+    }
+    break;
+
+
+case "5":
     Console.WriteLine("Cikis Yapiliyor.");
     shouldExit = true;
     break;
