@@ -36,8 +36,15 @@ case "2":
     break;
 
 case"3":
-    Console.WriteLine("Silmek istediginiz gorevi seciniz:");
+    Console.WriteLine("Mevcut Gorevler:");
     
+    foreach(Todo gorev in todos)
+    {
+         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
+    }
+
+    Console.WriteLine("Silmek istediginiz gorevi seciniz:");
+   
     int id = Convert.ToInt32(Console.ReadLine());
     Todo? silinecek = null;
 
@@ -53,9 +60,19 @@ case"3":
     {
          todos.Remove(silinecek);
     }
+    else
+    {
+        Console.WriteLine("Gorev Bulunamadi.");
+    }
     break;
 
 case "4":
+    Console.WriteLine("Mevcut Gorevler:");
+    
+    foreach(Todo gorev in todos)
+    {
+         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
+    }
     Console.WriteLine("Tamamlanan gorev id seciniz:");
     int finishId = Convert.ToInt32(Console.ReadLine());
     Todo? guncelleme = null;
