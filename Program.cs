@@ -1,6 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 List<Todo> todos = new List<Todo>();
+List<User> users = new List<User>();
 int nextId = 1;
+int nextUserId= 1;
 bool shouldExit = false;
 while (!shouldExit)
 {
@@ -9,7 +11,10 @@ Console.WriteLine("1.Gorevleri Listele");
 Console.WriteLine("2.Gorev Ekle");
 Console.WriteLine("3.Gorev Sil");
 Console.WriteLine("4.Gorev Durumu Guncelle");
-Console.WriteLine("5.Cikis Yap");
+Console.WriteLine("5.Kullanici Ekle");
+Console.WriteLine("6.Kullanicilari Listele");
+Console.WriteLine("7.Gorev Atamasi Yap");
+Console.WriteLine("8.Cikis Yap");
 
 var kullaniciSecimi = Console.ReadLine();
 
@@ -95,8 +100,43 @@ case "4":
     }
     break;
 
-
 case "5":
+    Console.WriteLine("Isim Giriniz:");
+    var isim = Console.ReadLine();
+
+    Console.WriteLine("Kullanici Adi Giriniz:");
+    var kullaniciAdi = Console.ReadLine();
+
+    Console.WriteLine("Sifre Giriniz:");
+    var sifre = Console.ReadLine();
+
+    User yeniKullanici = new User();
+    yeniKullanici.Id = nextUserId;
+    yeniKullanici.Name = isim;
+    yeniKullanici.UserName = kullaniciAdi;
+    yeniKullanici.Password = sifre;
+    users.Add(yeniKullanici);
+    nextUserId++;
+
+    Console.WriteLine("Kullanici eklendi.");
+    break;
+
+case "6":
+    Console.WriteLine("Mevcut Kullanicilar:");
+    
+    foreach(User kullanici in users)
+    {
+
+         Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name} , Kullanici Adi: {kullanici.UserName}");
+    }
+
+    break;
+
+case "7":
+
+    break;
+
+case "8":
     Console.WriteLine("Cikis Yapiliyor.");
     shouldExit = true;
     break;
