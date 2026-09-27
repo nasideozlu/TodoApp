@@ -26,6 +26,18 @@ case "1":
     foreach(Todo gorev in todos)
     {
          Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
+        foreach(int userId in gorev.AssignedUserIds)
+        {
+            foreach(User kullanici in users)
+            {
+               if (kullanici.Id == userId)
+               {
+                Console.WriteLine($"Atanan kullanici: {kullanici.Name}");
+               }
+            }
+        }
+
+
     }
     break;
 
@@ -133,8 +145,63 @@ case "6":
     break;
 
 case "7":
+    
+    Console.WriteLine("Mevcut Gorevler:");
+
+    foreach (Todo gorev in todos)
+    {
+        Console.WriteLine($"Id:{gorev.Id} , Gorev: {gorev.Name}");
+    }
+    Console.WriteLine("Atama yapilacak gorev Id giriniz.");
+    int gorevId = Convert.ToInt32(Console.ReadLine());
+
+    Todo? atananGorev = null;
+    foreach(Todo gorev in todos)
+    {
+        if (gorev.Id == gorevId) 
+        {
+            atananGorev = gorev;
+        }
+    }
+    if(atananGorev == null )
+    {
+        Console.WriteLine("Gorev bulunamadi.");
+    }
+    Console.WriteLine("Mevcut Kullanicilar:");
+    
+    foreach(User kullanici in users)
+    {
+
+         Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name} ");
+    }
+    Console.WriteLine("Atama yapilacak kullanici Id giriniz.");
+    int kullaniciId= Convert.ToInt32(Console.ReadLine());
+
+    User? gorevliKullanici = null;
+    
+    foreach(User kullanici in users)
+    {
+        if(kullanici.Id == kullaniciId)
+        {
+            gorevliKullanici = kullanici;
+            break;
+        }
+    }
+    if ( gorevliKullanici == null)
+    {
+        Console.WriteLine("Kullanici bulunamadi.");
+        break;
+    }
+        if (atananGorev.AssignedUserIds.Contains(gorevliKullanici.Id))
+        {
+            Console.WriteLine("Bu kullanici zaten bu goreve atanmis.");
+            break;
+        }
+    atananGorev.AssignedUserIds.Add(gorevliKullanici.Id);
+    Console.WriteLine("Gorev kullaniciya atandi.");
 
     break;
+    
 
 case "8":
     Console.WriteLine("Cikis Yapiliyor.");
