@@ -1,8 +1,14 @@
-﻿// See https://aka.ms/new-console-template for more information
-List<Todo> todos = new List<Todo>();
-List<User> users = new List<User>();
-int nextId = 1;
-int nextUserId= 1;
+﻿using System.Linq;
+
+
+List<Todo> todos = DataStorage.LoadTodos();
+List<User> users = DataStorage.LoadUsers();
+int nextId = todos.Count > 0
+    ? todos.Max( t => t.Id) + 1 
+    : 1;
+int nextUserId= users.Count > 0
+    ? users.Max( u => u.Id) + 1 
+    : 1;
 bool shouldExit = false;
 while (!shouldExit)
 {
@@ -49,6 +55,7 @@ case "2":
     yeniGorev.Name = gorevAdi;
     yeniGorev.Completed = false;
     todos.Add(yeniGorev);
+    DataStorage.SaveTodos(todos);
     nextId++;
     break;
 
@@ -76,6 +83,9 @@ case"3":
     if (silinecek != null)
     {
          todos.Remove(silinecek);
+         DataStorage.SaveTodos(todos);
+
+         Console.WriteLine("Gorev silindi.");
     }
     else
     {
@@ -104,6 +114,7 @@ case "4":
     if(guncelleme != null)
     {
         guncelleme.Completed = true;
+        DataStorage.SaveTodos(todos);
         Console.WriteLine("Gorev Tamamlandi.");
     }
     else 
@@ -128,6 +139,7 @@ case "5":
     yeniKullanici.UserName = kullaniciAdi;
     yeniKullanici.Password = sifre;
     users.Add(yeniKullanici);
+    DataStorage.SaveUsers(users);
     nextUserId++;
 
     Console.WriteLine("Kullanici eklendi.");
@@ -198,6 +210,7 @@ case "7":
             break;
         }
     atananGorev.AssignedUserIds.Add(gorevliKullanici.Id);
+    DataStorage.SaveTodos(todos);
     Console.WriteLine("Gorev kullaniciya atandi.");
 
     break;
