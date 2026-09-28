@@ -1,8 +1,15 @@
 ﻿using System.Linq;
 
-
 List<Todo> todos = DataStorage.LoadTodos();
 List<User> users = DataStorage.LoadUsers();
+foreach (Todo gorev in todos)
+{
+    if (gorev.AssignedUserIds.Count > 0)
+    {
+        gorev.Status = StatusType.Assigned;
+    }
+}
+DataStorage.SaveTodos(todos);
 int nextId = todos.Count > 0
     ? todos.Max( t => t.Id) + 1 
     : 1;
@@ -12,39 +19,14 @@ int nextUserId= users.Count > 0
 bool shouldExit = false;
 while (!shouldExit)
 {
-Console.WriteLine("Yapmak Istediginiz Islemi Secin");
-Console.WriteLine("1.Gorevleri Listele");
-Console.WriteLine("2.Gorev Ekle");
-Console.WriteLine("3.Gorev Sil");
-Console.WriteLine("4.Gorev Durumu Guncelle");
-Console.WriteLine("5.Kullanici Ekle");
-Console.WriteLine("6.Kullanicilari Listele");
-Console.WriteLine("7.Gorev Atamasi Yap");
-Console.WriteLine("8.Cikis Yap");
 
+SystemText();
 var kullaniciSecimi = Console.ReadLine();
 
 switch(kullaniciSecimi)
 {
 case "1":
-    Console.WriteLine("Mevcut Gorevler:");
-    
-    foreach(Todo gorev in todos)
-    {
-         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
-        foreach(int userId in gorev.AssignedUserIds)
-        {
-            foreach(User kullanici in users)
-            {
-               if (kullanici.Id == userId)
-               {
-                Console.WriteLine($"Atanan kullanici: {kullanici.Name}");
-               }
-            }
-        }
-
-
-    }
+    ShowTodos(todos, users);
     break;
 
 case "2":
@@ -53,33 +35,21 @@ case "2":
     Todo yeniGorev = new Todo();
     yeniGorev.Id = nextId;
     yeniGorev.Name = gorevAdi;
-    yeniGorev.Completed = false;
+    yeniGorev.Status = StatusType.Unassigned;
     todos.Add(yeniGorev);
     DataStorage.SaveTodos(todos);
     nextId++;
     break;
 
 case"3":
-    Console.WriteLine("Mevcut Gorevler:");
-    
-    foreach(Todo gorev in todos)
-    {
-         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
-    }
+    ShowTodos(todos, users);
 
     Console.WriteLine("Silmek istediginiz gorevi seciniz:");
    
     int id = Convert.ToInt32(Console.ReadLine());
-    Todo? silinecek = null;
-
-    foreach( Todo gorev in todos)
-    {
-        if (gorev.Id == id)
-        {
-            silinecek = gorev;
-        }
     
-    }
+    Todo? silinecek = FindTodo(todos, id );
+
     if (silinecek != null)
     {
          todos.Remove(silinecek);
@@ -94,26 +64,22 @@ case"3":
     break;
 
 case "4":
-    Console.WriteLine("Mevcut Gorevler:");
-    
-    foreach(Todo gorev in todos)
-    {
-         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Tamamlandi: {gorev.Completed}");
-    }
+    ShowTodos(todos, users);
+
     Console.WriteLine("Tamamlanan gorev id seciniz:");
     int finishId = Convert.ToInt32(Console.ReadLine());
-    Todo? guncelleme = null;
+    
+    Todo? guncelleme = FindTodo(todos, finishId);
 
-    foreach(Todo gorev in todos)
-    {
-        if(gorev.Id == finishId)
-        {
-            guncelleme = gorev;
-        }
-    }
     if(guncelleme != null)
     {
-        guncelleme.Completed = true;
+        if (guncelleme.Status != StatusType.Started)
+        {
+            Console.WriteLine("Yalnizca baslatilmis gorevler tamamlanabilir.");
+            break;
+        }
+        
+        guncelleme.ChangeStatus(StatusType.Finished);
         DataStorage.SaveTodos(todos);
         Console.WriteLine("Gorev Tamamlandi.");
     }
@@ -121,6 +87,7 @@ case "4":
     {
         Console.WriteLine("Gorev Bulunamadi.");
     }
+    
     break;
 
 case "5":
@@ -146,59 +113,31 @@ case "5":
     break;
 
 case "6":
-    Console.WriteLine("Mevcut Kullanicilar:");
-    
-    foreach(User kullanici in users)
-    {
-
-         Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name} , Kullanici Adi: {kullanici.UserName}");
-    }
-
+    ShowUsers(users);
     break;
 
 case "7":
     
-    Console.WriteLine("Mevcut Gorevler:");
+    ShowTodos(todos, users);
 
-    foreach (Todo gorev in todos)
-    {
-        Console.WriteLine($"Id:{gorev.Id} , Gorev: {gorev.Name}");
-    }
     Console.WriteLine("Atama yapilacak gorev Id giriniz.");
     int gorevId = Convert.ToInt32(Console.ReadLine());
 
-    Todo? atananGorev = null;
-    foreach(Todo gorev in todos)
-    {
-        if (gorev.Id == gorevId) 
-        {
-            atananGorev = gorev;
-        }
-    }
-    if(atananGorev == null )
+    Todo? atananGorev = FindTodo(todos, gorevId);
+
+    if (atananGorev == null)
     {
         Console.WriteLine("Gorev bulunamadi.");
+        break;
     }
-    Console.WriteLine("Mevcut Kullanicilar:");
     
-    foreach(User kullanici in users)
-    {
-
-         Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name} ");
-    }
+    ShowUsers(users);
+    
     Console.WriteLine("Atama yapilacak kullanici Id giriniz.");
     int kullaniciId= Convert.ToInt32(Console.ReadLine());
 
-    User? gorevliKullanici = null;
-    
-    foreach(User kullanici in users)
-    {
-        if(kullanici.Id == kullaniciId)
-        {
-            gorevliKullanici = kullanici;
-            break;
-        }
-    }
+    User? gorevliKullanici = FindUser(users, kullaniciId);
+
     if ( gorevliKullanici == null)
     {
         Console.WriteLine("Kullanici bulunamadi.");
@@ -210,13 +149,36 @@ case "7":
             break;
         }
     atananGorev.AssignedUserIds.Add(gorevliKullanici.Id);
+    atananGorev.ChangeStatus(StatusType.Assigned);
     DataStorage.SaveTodos(todos);
     Console.WriteLine("Gorev kullaniciya atandi.");
 
     break;
-    
 
 case "8":
+    ShowTodos(todos, users);
+
+    Console.WriteLine("Baslatilacak gorev Id giriniz.");
+    int startId = Convert.ToInt32(Console.ReadLine());
+
+    Todo? baslatilacakGorev = FindTodo(todos, startId);
+    if (baslatilacakGorev == null)
+    {
+        Console.WriteLine("Gorev bulunamadi.");
+    }
+    if (baslatilacakGorev.Status != StatusType.Assigned)
+    {
+        Console.WriteLine("Atanmamis gorev baslatilamaz.");
+        break;
+    }
+
+    baslatilacakGorev.ChangeStatus(StatusType.Started);
+    DataStorage.SaveTodos(todos);
+
+    Console.WriteLine("Gorev Baslatildi.");
+    break;
+
+case "9":
     Console.WriteLine("Cikis Yapiliyor.");
     shouldExit = true;
     break;
@@ -226,4 +188,78 @@ default:
     break;
 }
 
+}
+
+void SystemText()
+{
+
+Console.WriteLine("Yapmak Istediginiz Islemi Secin");
+Console.WriteLine("1.Gorevleri Listele");
+Console.WriteLine("2.Gorev Ekle");
+Console.WriteLine("3.Gorev Sil");
+Console.WriteLine("4.Gorev Durumu Guncelle");
+Console.WriteLine("5.Kullanici Ekle");
+Console.WriteLine("6.Kullanicilari Listele");
+Console.WriteLine("7.Gorev Atamasi Yap");
+Console.WriteLine("8.Gorev Baslat");
+Console.WriteLine("9.Cikis Yap");
+
+}
+
+void ShowTodos(List<Todo> todos, List<User> users )
+{
+    Console.WriteLine("Mevcut Gorevler:");
+    
+    foreach(Todo gorev in todos)
+    {
+         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Durum: {gorev.Status}");
+        
+        foreach (int userId in gorev.AssignedUserIds)
+        {
+            foreach (User kullanici in users)
+            {
+                if (kullanici.Id == userId)
+                {
+                    Console.WriteLine(
+                        $"Atanan kullanici: {kullanici.Name}"
+                    );
+                }
+            }
+        }
+    }
+    
+}
+
+Todo? FindTodo (List<Todo> todos, int id)
+{
+    foreach (Todo gorev in todos)
+    {
+        if (gorev.Id == id)
+        {
+            return gorev;
+        }
+    }
+    
+    return null;
+}
+User? FindUser (List<User> users, int id)
+{
+    foreach(User kullanici in users)
+    {
+        if (kullanici.Id == id)
+        {
+            return kullanici;
+        }
+    }
+
+    return null;
+}
+
+void ShowUsers(List<User> users )
+{
+    Console.WriteLine("Mevcut Kullanicilar:");
+    foreach (User kullanici in users)
+    {
+        Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name}");
+    }
 }
