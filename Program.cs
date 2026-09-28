@@ -2,73 +2,29 @@
 
 List<Todo> todos = DataStorage.LoadTodos();
 List<User> users = DataStorage.LoadUsers();
+UserService userService = new UserService();
 
 User? girisYapanKullanici = null;
 
 if (users.Count == 0)
 {
-    Console.WriteLine("Ilk kullanici kaydi");
-    Console.WriteLine("Isim Giriniz:");
-    string? isim = Console.ReadLine();
+    girisYapanKullanici = userService.RegisterFirstUser(users);
 
-    Console.WriteLine("Kullanici Adi Giriniz:");
-    string? kullaniciAdi = Console.ReadLine();
-
-    Console.WriteLine("Sifre Giriniz:");
-    string? sifre = Console.ReadLine();
-
-    if (string.IsNullOrWhiteSpace(isim) ||
-        string.IsNullOrWhiteSpace(kullaniciAdi) ||
-        string.IsNullOrWhiteSpace(sifre))
+    if (girisYapanKullanici == null)
     {
-        Console.WriteLine("Tum alanlar zorunludur.");
         return;
     }
-
-    User yeniKullanici = new User
-    {
-        Id = users.Count > 0 ? users.Max(u => u.Id) + 1 : 1,
-        Name = isim,
-        UserName = kullaniciAdi,
-        PasswordHash = PasswordHasher.HashPassword(sifre)
-    };
-
-    users.Add(yeniKullanici);
-    DataStorage.SaveUsers(users);
-
-    girisYapanKullanici = yeniKullanici;
-    Console.WriteLine($"Hos geldin {girisYapanKullanici.Name}!");
 }
 else
 {
-    Console.WriteLine("Kullanici Adi:");
-    string? girilenKullaniciAdi = Console.ReadLine();
+    girisYapanKullanici = userService.Login(users);
 
-    Console.WriteLine("Sifre:");
-    string? girilenSifre = Console.ReadLine();
-    if (string.IsNullOrWhiteSpace(girilenKullaniciAdi) ||
-    string.IsNullOrWhiteSpace(girilenSifre))
-{
-    Console.WriteLine("Kullanici adi ve sifre bos olamaz.");
-    return;
-}
-
-    girisYapanKullanici = users.FirstOrDefault(
-        u => u.UserName == girilenKullaniciAdi
-    );
-
-    if (girisYapanKullanici == null ||
-        girilenSifre == null ||
-        !PasswordHasher.VerifyPassword(
-            girilenSifre,
-            girisYapanKullanici.PasswordHash))
+    if (girisYapanKullanici == null)
     {
-        Console.WriteLine("Kullanici adi veya sifre hatali.");
         return;
     }
-
-    Console.WriteLine($"Hos geldin {girisYapanKullanici.Name}!");
 }
+
 
 foreach (Todo gorev in todos)
 {
