@@ -2,14 +2,84 @@
 
 List<Todo> todos = DataStorage.LoadTodos();
 List<User> users = DataStorage.LoadUsers();
+
+User? girisYapanKullanici = null;
+
+if (users.Count == 0)
+{
+    Console.WriteLine("Ilk kullanici kaydi");
+    Console.WriteLine("Isim Giriniz:");
+    string? isim = Console.ReadLine();
+
+    Console.WriteLine("Kullanici Adi Giriniz:");
+    string? kullaniciAdi = Console.ReadLine();
+
+    Console.WriteLine("Sifre Giriniz:");
+    string? sifre = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(isim) ||
+        string.IsNullOrWhiteSpace(kullaniciAdi) ||
+        string.IsNullOrWhiteSpace(sifre))
+    {
+        Console.WriteLine("Tum alanlar zorunludur.");
+        return;
+    }
+
+    User yeniKullanici = new User
+    {
+        Id = users.Count > 0 ? users.Max(u => u.Id) + 1 : 1,
+        Name = isim,
+        UserName = kullaniciAdi,
+        PasswordHash = PasswordHasher.HashPassword(sifre)
+    };
+
+    users.Add(yeniKullanici);
+    DataStorage.SaveUsers(users);
+
+    girisYapanKullanici = yeniKullanici;
+    Console.WriteLine($"Hos geldin {girisYapanKullanici.Name}!");
+}
+else
+{
+    Console.WriteLine("Kullanici Adi:");
+    string? girilenKullaniciAdi = Console.ReadLine();
+
+    Console.WriteLine("Sifre:");
+    string? girilenSifre = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(girilenKullaniciAdi) ||
+    string.IsNullOrWhiteSpace(girilenSifre))
+{
+    Console.WriteLine("Kullanici adi ve sifre bos olamaz.");
+    return;
+}
+
+    girisYapanKullanici = users.FirstOrDefault(
+        u => u.UserName == girilenKullaniciAdi
+    );
+
+    if (girisYapanKullanici == null ||
+        girilenSifre == null ||
+        !PasswordHasher.VerifyPassword(
+            girilenSifre,
+            girisYapanKullanici.PasswordHash))
+    {
+        Console.WriteLine("Kullanici adi veya sifre hatali.");
+        return;
+    }
+
+    Console.WriteLine($"Hos geldin {girisYapanKullanici.Name}!");
+}
+
 foreach (Todo gorev in todos)
 {
-    if (gorev.AssignedUserIds.Count > 0)
+    if (gorev.AssignedUserIds.Count > 0 &&
+        gorev.Status == StatusType.Unassigned)
     {
-        gorev.Status = StatusType.Assigned;
+        gorev.ChangeStatus(StatusType.Assigned);
     }
 }
 DataStorage.SaveTodos(todos);
+
 int nextId = todos.Count > 0
     ? todos.Max( t => t.Id) + 1 
     : 1;
@@ -96,15 +166,28 @@ case "5":
 
     Console.WriteLine("Kullanici Adi Giriniz:");
     var kullaniciAdi = Console.ReadLine();
+    if (users.Any(u => u.UserName == kullaniciAdi))
+    {
+        Console.WriteLine("Bu kullanici adi kullaniliyor.");
+        break;
+    }
 
     Console.WriteLine("Sifre Giriniz:");
     var sifre = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(isim) ||
+    string.IsNullOrWhiteSpace(kullaniciAdi) ||
+    string.IsNullOrWhiteSpace(sifre))
+{
+    Console.WriteLine("Tum alanlar zorunludur.");
+    break;
+}
 
     User yeniKullanici = new User();
     yeniKullanici.Id = nextUserId;
     yeniKullanici.Name = isim;
     yeniKullanici.UserName = kullaniciAdi;
-    yeniKullanici.Password = sifre;
+    yeniKullanici.PasswordHash =  PasswordHasher.HashPassword(sifre);
     users.Add(yeniKullanici);
     DataStorage.SaveUsers(users);
     nextUserId++;
@@ -165,6 +248,7 @@ case "8":
     if (baslatilacakGorev == null)
     {
         Console.WriteLine("Gorev bulunamadi.");
+        break;
     }
     if (baslatilacakGorev.Status != StatusType.Assigned)
     {
@@ -212,7 +296,9 @@ void ShowTodos(List<Todo> todos, List<User> users )
     
     foreach(Todo gorev in todos)
     {
-         Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Durum: {gorev.Status}");
+        Console.WriteLine($"Id: {gorev.Id} , Gorev: {gorev.Name} , Durum: {gorev.Status}");
+        Console.WriteLine($"Baslangic: {gorev.StartDate?.ToString("dd.MM.yyyy HH:mm") ?? "Baslamadi"}");
+        Console.WriteLine($"Bitis: {gorev.EndDate?.ToString("dd.MM.yyyy HH:mm") ?? "Bitmedi"}");
         
         foreach (int userId in gorev.AssignedUserIds)
         {
