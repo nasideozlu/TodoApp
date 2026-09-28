@@ -5,11 +5,25 @@ public string Name {get; set;}
 public StatusType Status{get; set;}
 public List<int> AssignedUserIds {get; set; } = new List<int>();
 
-public void ChangeStatus( StatusType status)
+public DateTime? StartDate {get; set;}
+public DateTime? EndDate {get; set;}
+
+
+public void ChangeStatus(StatusType status)
 {
     Status = status;
+
+    if (status == StatusType.Started)
+    {
+        StartDate = DateTime.Now;
+    }
+    else if (status == StatusType.Finished)
+    {
+        EndDate = DateTime.Now;
+    }
 }
 }
+
 
 public enum StatusType
 {
