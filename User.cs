@@ -6,5 +6,15 @@ public class User
     public string PasswordHash {get; set;}= string.Empty;
 
 
+
+public static void ShowUsers(UserService userService, List<User> users )
+{
+    Console.WriteLine("Mevcut Kullanicilar:");
+    foreach (User kullanici in users)
+    {
+        Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name}");
+    }
+
+}
     
 }
