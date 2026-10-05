@@ -1,5 +1,3 @@
-using System.Linq;
-
 public class TodoService
 {
     public Todo? AddTodo(List<Todo> todos, int nextId, string? gorevAdi)
