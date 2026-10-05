@@ -1,6 +1,5 @@
 using System.Linq;
 
-
 public class UserService
 {
     public User? RegisterFirstUser(List<User> users)
@@ -39,6 +38,7 @@ public class UserService
 
         return yeniKullanici;
     }
+
     public User? Login(List<User> users)
     {
         Console.WriteLine("Kullanici Adi:");
@@ -54,7 +54,7 @@ public class UserService
             return null;
         }
 
-        User? kullanici = users.FirstOrDefault(u => u.UserName == girilenKullaniciAdi);
+        User? kullanici = FindUser(users, girilenKullaniciAdi);
 
         if (kullanici == null ||
             !PasswordHasher.VerifyPassword(
@@ -68,5 +68,51 @@ public class UserService
         Console.WriteLine($"Hos geldin {kullanici.Name}!");
 
         return kullanici;
+    }
+
+    public bool AddUser(List<User> users, int nextUserId)
+    {
+        Console.WriteLine("Isim Giriniz:");
+        string? isim = Console.ReadLine();
+
+        Console.WriteLine("Kullanici Adi Giriniz:");
+        string? kullaniciAdi = Console.ReadLine();
+
+        if (users.Any(u => u.UserName == kullaniciAdi))
+        {
+            Console.WriteLine("Bu kullanici adi kullaniliyor.");
+            return false;
+        }
+
+        Console.WriteLine("Sifre Giriniz:");
+        string? sifre = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(isim) ||
+            string.IsNullOrWhiteSpace(kullaniciAdi) ||
+            string.IsNullOrWhiteSpace(sifre))
+        {
+            Console.WriteLine("Tum alanlar zorunludur.");
+            return false;
+        }
+
+        User yeniKullanici = new User
+        {
+            Id = nextUserId,
+            Name = isim,
+            UserName = kullaniciAdi,
+            PasswordHash = PasswordHasher.HashPassword(sifre)
+        };
+
+        users.Add(yeniKullanici);
+        DataStorage.SaveUsers(users);
+
+        Console.WriteLine("Kullanici eklendi.");
+
+        return true;
+    }
+
+    private User? FindUser(List<User> users, string userName)
+    {
+        return users.FirstOrDefault(u => u.UserName == userName);
     }
 }

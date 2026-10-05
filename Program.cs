@@ -3,38 +3,16 @@
 List<Todo> todos = DataStorage.LoadTodos();
 List<User> users = DataStorage.LoadUsers();
 UserService userService = new UserService();
+TodoService todoService = new TodoService();
 
-User? girisYapanKullanici = null;
+User? girisYapanKullanici = LoginUser(users, userService);
 
-if (users.Count == 0)
+if (girisYapanKullanici == null)
 {
-    girisYapanKullanici = userService.RegisterFirstUser(users);
-
-    if (girisYapanKullanici == null)
-    {
-        return;
-    }
-}
-else
-{
-    girisYapanKullanici = userService.Login(users);
-
-    if (girisYapanKullanici == null)
-    {
-        return;
-    }
+    return;
 }
 
-
-foreach (Todo gorev in todos)
-{
-    if (gorev.AssignedUserIds.Count > 0 &&
-        gorev.Status == StatusType.Unassigned)
-    {
-        gorev.ChangeStatus(StatusType.Assigned);
-    }
-}
-DataStorage.SaveTodos(todos);
+todoService.UpdateAssignedTodoStatuses(todos);
 
 int nextId = todos.Count > 0
     ? todos.Max( t => t.Id) + 1 
@@ -56,99 +34,26 @@ case "1":
     break;
 
 case "2":
-    Console.WriteLine("Gorev adini yaziniz:");
-    var gorevAdi = Console.ReadLine();
-    Todo yeniGorev = new Todo();
-    yeniGorev.Id = nextId;
-    yeniGorev.Name = gorevAdi;
-    yeniGorev.Status = StatusType.Unassigned;
-    todos.Add(yeniGorev);
-    DataStorage.SaveTodos(todos);
-    nextId++;
+    
+    AddTodoMenu();
     break;
 
 case"3":
-    ShowTodos(todos, users);
-
-    Console.WriteLine("Silmek istediginiz gorevi seciniz:");
-   
-    int id = Convert.ToInt32(Console.ReadLine());
-    
-    Todo? silinecek = FindTodo(todos, id );
-
-    if (silinecek != null)
-    {
-         todos.Remove(silinecek);
-         DataStorage.SaveTodos(todos);
-
-         Console.WriteLine("Gorev silindi.");
-    }
-    else
-    {
-        Console.WriteLine("Gorev Bulunamadi.");
-    }
+    DeleteTodoMenu();
     break;
 
 case "4":
-    ShowTodos(todos, users);
-
-    Console.WriteLine("Tamamlanan gorev id seciniz:");
-    int finishId = Convert.ToInt32(Console.ReadLine());
-    
-    Todo? guncelleme = FindTodo(todos, finishId);
-
-    if(guncelleme != null)
-    {
-        if (guncelleme.Status != StatusType.Started)
-        {
-            Console.WriteLine("Yalnizca baslatilmis gorevler tamamlanabilir.");
-            break;
-        }
-        
-        guncelleme.ChangeStatus(StatusType.Finished);
-        DataStorage.SaveTodos(todos);
-        Console.WriteLine("Gorev Tamamlandi.");
-    }
-    else 
-    {
-        Console.WriteLine("Gorev Bulunamadi.");
-    }
-    
+    CompleteTodoMenu();
     break;
 
 case "5":
-    Console.WriteLine("Isim Giriniz:");
-    var isim = Console.ReadLine();
+    bool kullaniciEklendi = userService.AddUser(users, nextUserId);
 
-    Console.WriteLine("Kullanici Adi Giriniz:");
-    var kullaniciAdi = Console.ReadLine();
-    if (users.Any(u => u.UserName == kullaniciAdi))
+    if (kullaniciEklendi)
     {
-        Console.WriteLine("Bu kullanici adi kullaniliyor.");
-        break;
+        nextUserId++;
     }
 
-    Console.WriteLine("Sifre Giriniz:");
-    var sifre = Console.ReadLine();
-
-    if (string.IsNullOrWhiteSpace(isim) ||
-    string.IsNullOrWhiteSpace(kullaniciAdi) ||
-    string.IsNullOrWhiteSpace(sifre))
-{
-    Console.WriteLine("Tum alanlar zorunludur.");
-    break;
-}
-
-    User yeniKullanici = new User();
-    yeniKullanici.Id = nextUserId;
-    yeniKullanici.Name = isim;
-    yeniKullanici.UserName = kullaniciAdi;
-    yeniKullanici.PasswordHash =  PasswordHasher.HashPassword(sifre);
-    users.Add(yeniKullanici);
-    DataStorage.SaveUsers(users);
-    nextUserId++;
-
-    Console.WriteLine("Kullanici eklendi.");
     break;
 
 case "6":
@@ -156,66 +61,11 @@ case "6":
     break;
 
 case "7":
-    
-    ShowTodos(todos, users);
-
-    Console.WriteLine("Atama yapilacak gorev Id giriniz.");
-    int gorevId = Convert.ToInt32(Console.ReadLine());
-
-    Todo? atananGorev = FindTodo(todos, gorevId);
-
-    if (atananGorev == null)
-    {
-        Console.WriteLine("Gorev bulunamadi.");
-        break;
-    }
-    
-    ShowUsers(users);
-    
-    Console.WriteLine("Atama yapilacak kullanici Id giriniz.");
-    int kullaniciId= Convert.ToInt32(Console.ReadLine());
-
-    User? gorevliKullanici = FindUser(users, kullaniciId);
-
-    if ( gorevliKullanici == null)
-    {
-        Console.WriteLine("Kullanici bulunamadi.");
-        break;
-    }
-        if (atananGorev.AssignedUserIds.Contains(gorevliKullanici.Id))
-        {
-            Console.WriteLine("Bu kullanici zaten bu goreve atanmis.");
-            break;
-        }
-    atananGorev.AssignedUserIds.Add(gorevliKullanici.Id);
-    atananGorev.ChangeStatus(StatusType.Assigned);
-    DataStorage.SaveTodos(todos);
-    Console.WriteLine("Gorev kullaniciya atandi.");
-
+    AssignTodoMenu();
     break;
 
 case "8":
-    ShowTodos(todos, users);
-
-    Console.WriteLine("Baslatilacak gorev Id giriniz.");
-    int startId = Convert.ToInt32(Console.ReadLine());
-
-    Todo? baslatilacakGorev = FindTodo(todos, startId);
-    if (baslatilacakGorev == null)
-    {
-        Console.WriteLine("Gorev bulunamadi.");
-        break;
-    }
-    if (baslatilacakGorev.Status != StatusType.Assigned)
-    {
-        Console.WriteLine("Atanmamis gorev baslatilamaz.");
-        break;
-    }
-
-    baslatilacakGorev.ChangeStatus(StatusType.Started);
-    DataStorage.SaveTodos(todos);
-
-    Console.WriteLine("Gorev Baslatildi.");
+    StartTodoMenu();
     break;
 
 case "9":
@@ -272,31 +122,6 @@ void ShowTodos(List<Todo> todos, List<User> users )
     
 }
 
-Todo? FindTodo (List<Todo> todos, int id)
-{
-    foreach (Todo gorev in todos)
-    {
-        if (gorev.Id == id)
-        {
-            return gorev;
-        }
-    }
-    
-    return null;
-}
-User? FindUser (List<User> users, int id)
-{
-    foreach(User kullanici in users)
-    {
-        if (kullanici.Id == id)
-        {
-            return kullanici;
-        }
-    }
-
-    return null;
-}
-
 void ShowUsers(List<User> users )
 {
     Console.WriteLine("Mevcut Kullanicilar:");
@@ -304,4 +129,144 @@ void ShowUsers(List<User> users )
     {
         Console.WriteLine($"Id: {kullanici.Id} , Isim: {kullanici.Name}");
     }
+
+}
+void AddTodoMenu()
+{
+    Console.WriteLine("Gorev adini yaziniz:");
+    string? gorevAdi = Console.ReadLine();
+
+    Todo? yeniGorev = todoService.AddTodo(
+        todos,
+        nextId,
+        gorevAdi
+    );
+
+    if (yeniGorev != null)
+    {
+        nextId++;
+        Console.WriteLine("Gorev eklendi.");
+    }
+    else
+    {
+        Console.WriteLine("Gorev adi bos olamaz.");
+    }
+}
+void DeleteTodoMenu()
+{
+    ShowTodos(todos, users);
+
+    Console.WriteLine("Silmek istediginiz gorev Id seciniz:");
+
+    if (!int.TryParse(Console.ReadLine(), out int id))
+    {
+        Console.WriteLine("Gecersiz Id.");
+        return;
+    }
+
+    bool silindi = todoService.DeleteTodo(todos, id);
+
+    if (silindi)
+    {
+        Console.WriteLine("Gorev silindi.");
+    }
+    else
+    {
+        Console.WriteLine("Gorev Bulunamadi.");
+    }
+}
+
+void CompleteTodoMenu()
+{
+    ShowTodos(todos, users);
+
+    Console.WriteLine("Tamamlanan gorev id seciniz:");
+
+    if (!int.TryParse(Console.ReadLine(), out int finishId))
+    {
+        Console.WriteLine("Gecersiz Id.");
+        return;
+    }
+
+    bool tamamlandi = todoService.CompleteTodo(todos, finishId);
+
+    if (tamamlandi)
+    {
+        Console.WriteLine("Gorev Tamamlandi.");
+    }
+    else
+    {
+        Console.WriteLine("Gorev bulunamadi veya baslatilmamis.");
+    }
+}
+
+void AssignTodoMenu()
+{
+    ShowTodos(todos, users);
+
+    Console.WriteLine("Atama yapilacak gorev Id giriniz:");
+
+    if (!int.TryParse(Console.ReadLine(), out int gorevId))
+    {
+        Console.WriteLine("Gecersiz Id.");
+        return;
+    }
+
+    ShowUsers(users);
+
+    Console.WriteLine("Atama yapilacak kullanici Id giriniz:");
+
+    if (!int.TryParse(Console.ReadLine(), out int kullaniciId))
+    {
+        Console.WriteLine("Gecersiz Id.");
+        return;
+    }
+
+    bool atandi = todoService.AssignTodo(
+        todos,
+        users,
+        gorevId,
+        kullaniciId
+    );
+
+    if (atandi)
+    {
+        Console.WriteLine("Gorev kullaniciya atandi.");
+    }
+    else
+    {
+        Console.WriteLine("Gorev veya kullanici bulunamadi ya da kullanici zaten atanmis.");
+    }
+}
+void StartTodoMenu()
+{
+    ShowTodos(todos, users);
+
+    Console.WriteLine("Baslatilacak gorev Id giriniz.");
+
+    if (!int.TryParse(Console.ReadLine(), out int startId))
+    {
+        Console.WriteLine("Gecersiz Id.");
+        return;
+    }
+
+    bool baslatildi = todoService.StartTodo(todos, startId);
+
+    if (baslatildi)
+    {
+        Console.WriteLine("Gorev Baslatildi.");
+    }
+    else
+    {
+        Console.WriteLine("Gorev bulunamadi veya atanmamis.");
+    }
+}
+User? LoginUser(List<User> users, UserService userService)
+{
+    if (users.Count == 0)
+    {
+        return userService.RegisterFirstUser(users);
+    }
+
+    return userService.Login(users);
 }
