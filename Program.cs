@@ -68,13 +68,15 @@ case "8":
     break;
 
 case "9":
-    Console.WriteLine("Cikis Yapiliyor.");
+    Console.WriteLine(
+        AppMessages.GetMessage(AppMessage.ExitMessage));
     shouldExit = true;
     break;
 
 default:
-    Console.WriteLine("Hatali Secim Yaptiniz");
-    break;
+Console.WriteLine(
+    AppMessages.GetMessage(AppMessage.InvalidSelection));
+break;
 }
 
 }
